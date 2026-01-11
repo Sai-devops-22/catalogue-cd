@@ -75,28 +75,27 @@ pipeline {
                 }
             }        
         }
-        stage("Check Deploy"){
+stage('Check Status'){
             steps{
                 script{
-                    withAWS(credentials:"aws-creds",region:"us-east-1") {
-                        // def deployment = sh(returnStdout:true, script:"kubectl rollout status deployment/catalogue --timeout=30s || echo FAILED" )
-                        def deploymentStatus = sh(returnStdout:true, script:"kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo FAILED").trim()
-                        if (deploymentStatus.contains("successfully rolled out")){
-                            echo "deployment is success"
-                        }
-                        else{
+                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                        def deploymentStatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo FAILED").trim()
+                        if (deploymentStatus.contains("successfully rolled out")) {
+                            echo "Deployment is success"
+                        } else {
                             sh """
                                 helm rollback $COMPONENT -n $PROJECT
-                                sleep  20
+                                sleep 20
                             """
-                            def rollback = sh(returnStdout:true, script:"kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo Failed").trim()
-                            if (rollback.contains("successfully rolled out")){
-                                error "deployment fail , succefully rolled out"
+                            def rollbackStatus = sh(returnStdout: true, script: "kubectl rollout status deployment/catalogue --timeout=30s -n $PROJECT || echo FAILED").trim()
+                            if (rollbackStatus.contains("successfully rolled out")) {
+                                error "Deployment is Failure, Rollback Success"
                             }
                             else{
-                                error "deployment fail, rollback fail"
+                                error "Deployment is Failure, Rollback Failure. Application is not running"
                             }
                         }
+
                     }
                 }
             }
