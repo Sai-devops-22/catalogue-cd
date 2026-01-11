@@ -13,7 +13,6 @@ pipeline {
     options {
         timeout(time:30 , unit:"MINUTES")
         disableConcurrentBuilds()
-        ansiColor()
     }
     parameters {
         string(name: "appVersion", description: "Image version of the application")
